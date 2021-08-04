@@ -46,6 +46,7 @@
 		AB6E13A626BA6727009350DA /* stb_image.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stb_image.h; sourceTree = "<group>"; };
 		AB6E13B126BA6738009350DA /* ModelVertexShader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ModelVertexShader.cpp; sourceTree = "<group>"; };
 		AB6E13B226BA6738009350DA /* ModelFragmentShader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ModelFragmentShader.cpp; sourceTree = "<group>"; };
+		AB6E13B326BA9DB3009350DA /* InstanceVertexShader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = InstanceVertexShader.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -110,6 +111,7 @@
 		AB6E13B026BA6738009350DA /* ModelShader */ = {
 			isa = PBXGroup;
 			children = (
+				AB6E13B326BA9DB3009350DA /* InstanceVertexShader.cpp */,
 				AB6E13B126BA6738009350DA /* ModelVertexShader.cpp */,
 				AB6E13B226BA6738009350DA /* ModelFragmentShader.cpp */,
 			);

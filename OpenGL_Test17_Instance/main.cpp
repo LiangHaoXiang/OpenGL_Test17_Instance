@@ -27,7 +27,7 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 // camera
-Camera camera(vec3(0.0f, 0.0f, 3.0f));
+Camera camera(vec3(0.0f, 100.0f, 250.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -83,7 +83,9 @@ int main()
     char* headDir = "/Users/haoxiangliang/Desktop/代码草稿/OpenGL/OpenGL_Test17_Instance/OpenGL_Test17_Instance/";
     string p5 = string(headDir) + "ModelShader/ModelVertexShader.cpp";
     string p6 = string(headDir) + "ModelShader/ModelFragmentShader.cpp";
-    Shader modelShader(p5.c_str(), p6.c_str());
+    string p7 = string(headDir) + "ModelShader/InstanceVertexShader.cpp";
+    Shader planetShader(p5.c_str(), p6.c_str());
+    Shader rockShader(p7.c_str(), p6.c_str());
 
     // load models
     // -----------
@@ -91,12 +93,12 @@ int main()
     Model rock("/Users/haoxiangliang/Desktop/未命名文件夹/rock/rock.obj");
     
     mat4 model = mat4(1.0f);
-    unsigned int amount = 1000;
+    unsigned int amount = 100000;
     mat4* modelMatrices;
     modelMatrices = new mat4[amount];
     srand(glfwGetTime()); // 初始化随机种子
-    float radius = 50.0;
-    float offset = 2.5f;
+    float radius = 150.0f;
+    float offset = 25.0f;
     for(unsigned int i = 0; i < amount; i++)
     {
         model = mat4(1.0f);
@@ -122,6 +124,34 @@ int main()
         modelMatrices[i] = model;
     }
     
+    //顶点缓冲对象
+    unsigned int buffer;
+    glGenBuffers(1, &buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    glBufferData(GL_ARRAY_BUFFER, amount * sizeof(mat4), &modelMatrices[0], GL_STATIC_DRAW);
+    
+    for (unsigned int i = 0; i < rock.meshes.size(); i++)
+    {
+        unsigned int VAO = rock.meshes[i].VAO;
+        glBindVertexArray(VAO);
+        GLsizei vec4Size = sizeof(vec4);
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)0);
+        glEnableVertexAttribArray(4);
+        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(vec4Size));
+        glEnableVertexAttribArray(5);
+        glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(2 * vec4Size));
+        glEnableVertexAttribArray(6);
+        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(3 * vec4Size));
+        
+        glVertexAttribDivisor(3, 1);
+        glVertexAttribDivisor(4, 1);
+        glVertexAttribDivisor(5, 1);
+        glVertexAttribDivisor(6, 1);
+        
+        glBindVertexArray(0);
+    }
+    
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
@@ -142,23 +172,36 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // view/projection transformations
-        mat4 projection = perspective(radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        mat4 projection = perspective(radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
         mat4 view = camera.GetViewMatrix();
         
         // 绘制行星
-        modelShader.use();
-        modelShader.setMat4("view", view);
-        modelShader.setMat4("projection", projection);
+        planetShader.use();
+        planetShader.setMat4("view", view);
+        planetShader.setMat4("projection", projection);
+        model = mat4(1.0f);
         model = translate(model, vec3(20.0f, -3.0f, 10.0f));
         model = scale(model, vec3(4.0f, 4.0f, 4.0f));
-        modelShader.setMat4("model", model);
-        planet.Draw(modelShader);
+        planetShader.setMat4("model", model);
+        planet.Draw(planetShader);
 
         // 绘制小行星
-        for(unsigned int i = 0; i < amount; i++)
+//        for(unsigned int i = 0; i < amount; i++)
+//        {
+//            modelShader.setMat4("model", modelMatrices[i]);
+//            rock.Draw(modelShader);
+//        }
+        rockShader.use();
+        rockShader.setMat4("view", view);
+        rockShader.setMat4("projection", projection);
+        rockShader.setInt("texture_diffuse1", 0);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, rock.textures_loaded[0].id);
+        for (unsigned int i = 0; i < rock.meshes.size(); i++)
         {
-            modelShader.setMat4("model", modelMatrices[i]);
-            rock.Draw(modelShader);
+            glBindVertexArray(rock.meshes[i].VAO);
+            glDrawElementsInstanced(GL_TRIANGLES, rock.meshes[i].indices.size(), GL_UNSIGNED_INT, 0, amount);
+            glBindVertexArray(0);
         }
 
         model = mat4(1.0f);
